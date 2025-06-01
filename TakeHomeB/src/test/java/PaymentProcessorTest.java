@@ -75,8 +75,6 @@ public class PaymentProcessorTest {
         void testValidAmountFirstOrderCreditCard() {
             double result = processor.processPayment(100.0, true, PaymentProcessor.PaymentMethod.CREDIT_CARD);
             // Expected with tax after discount: (100 * 0.85) * 1.15 = 97.75
-            // But current implementation gives: 85.0 (tax ignored)
-            // This test will FAIL and reveal the tax calculation bug
             assertEquals(97.75, result, 0.01, "Tax should be applied after discount calculation");
         }
 
@@ -85,7 +83,6 @@ public class PaymentProcessorTest {
         void testValidAmountNotFirstOrderPayPal() {
             double result = processor.processPayment(100.0, false, PaymentProcessor.PaymentMethod.PAYPAL);
             // Expected with tax: (100 * 0.98) * 1.15 = 112.7
-            // But current implementation gives: 98.0 (tax ignored)
             assertEquals(112.7, result, 0.01, "Tax should be applied to final amount");
         }
 
@@ -94,7 +91,6 @@ public class PaymentProcessorTest {
         void testValidAmountFirstOrderCash() {
             double result = processor.processPayment(100.0, true, PaymentProcessor.PaymentMethod.CASH);
             // Expected with tax after discount: (100 * 0.90) * 1.15 = 103.5
-            // But current implementation gives: 90.0 (tax ignored)
             assertEquals(103.5, result, 0.01, "Tax should be applied after first order discount");
         }
 
@@ -103,7 +99,6 @@ public class PaymentProcessorTest {
         void testValidAmountNotFirstOrderCash() {
             double result = processor.processPayment(100.0, false, PaymentProcessor.PaymentMethod.CASH);
             // Expected with tax: 100 * 1.15 = 115.0
-            // But current implementation gives: 100.0 (tax ignored)
             assertEquals(115.0, result, 0.01, "Tax should be applied even with no discounts");
         }
     }
@@ -117,7 +112,6 @@ public class PaymentProcessorTest {
         void testDecisionTable_FirstOrder_CreditCard() {
             double result = processor.processPayment(200.0, true, PaymentProcessor.PaymentMethod.CREDIT_CARD);
             // Expected: (200 * 0.85) * 1.15 = 195.5
-            // Current buggy: 170.0 (tax ignored)
             assertEquals(195.5, result, 0.01, "Should apply 15% tax after 15% total discount");
         }
 
@@ -126,7 +120,6 @@ public class PaymentProcessorTest {
         void testDecisionTable_FirstOrder_PayPal() {
             double result = processor.processPayment(200.0, true, PaymentProcessor.PaymentMethod.PAYPAL);
             // Expected: (200 * 0.88) * 1.15 = 202.4
-            // Current buggy: 176.0 (tax ignored)
             assertEquals(202.4, result, 0.01, "Should apply 15% tax after 12% total discount");
         }
 
@@ -135,7 +128,6 @@ public class PaymentProcessorTest {
         void testDecisionTable_FirstOrder_Cash() {
             double result = processor.processPayment(200.0, true, PaymentProcessor.PaymentMethod.CASH);
             // Expected: (200 * 0.90) * 1.15 = 207.0
-            // Current buggy: 180.0 (tax ignored)
             assertEquals(207.0, result, 0.01, "Should apply 15% tax after 10% first order discount");
         }
 
@@ -144,7 +136,6 @@ public class PaymentProcessorTest {
         void testDecisionTable_NotFirstOrder_CreditCard() {
             double result = processor.processPayment(200.0, false, PaymentProcessor.PaymentMethod.CREDIT_CARD);
             // Expected: (200 * 0.95) * 1.15 = 218.5
-            // Current buggy: 190.0 (tax ignored)
             assertEquals(218.5, result, 0.01, "Should apply 15% tax after 5% credit card discount");
         }
 
@@ -153,7 +144,6 @@ public class PaymentProcessorTest {
         void testDecisionTable_NotFirstOrder_PayPal() {
             double result = processor.processPayment(200.0, false, PaymentProcessor.PaymentMethod.PAYPAL);
             // Expected: (200 * 0.98) * 1.15 = 225.4
-            // Current buggy: 196.0 (tax ignored)
             assertEquals(225.4, result, 0.01, "Should apply 15% tax after 2% PayPal discount");
         }
 
@@ -162,7 +152,6 @@ public class PaymentProcessorTest {
         void testDecisionTable_NotFirstOrder_Cash() {
             double result = processor.processPayment(200.0, false, PaymentProcessor.PaymentMethod.CASH);
             // Expected: 200 * 1.15 = 230.0 (no discount, but tax applied)
-            // Current buggy: 200.0 (tax ignored)
             assertEquals(230.0, result, 0.01, "Should apply 15% tax with no discounts");
         }
     }
@@ -253,8 +242,6 @@ public class PaymentProcessorTest {
         void testValidAmountFirstOrderCreditCardPath() {
             double result = processor.processPayment(100.0, true, PaymentProcessor.PaymentMethod.CREDIT_CARD);
             // This path should: calculate discount (15%), then apply tax (15%) to discounted amount
-            // Expected: (100 * 0.85) * 1.15 = 97.75
-            // But gets: 85.0 because tax calculation is ignored
             assertEquals(97.75, result, 0.01, "Tax should be applied after discount in this execution path");
         }
 
@@ -264,7 +251,6 @@ public class PaymentProcessorTest {
             double result = processor.processPayment(100.0, false, PaymentProcessor.PaymentMethod.PAYPAL);
             // This path calculates taxedAmount but doesn't use it in final calculation
             // Expected: (100 * 0.98) * 1.15 = 112.7
-            // But gets: 98.0 because finalAmount = discountedAmount (ignoring tax)
             assertEquals(112.7, result, 0.01, "Tax calculation path is executed but result ignored");
         }
 
@@ -274,7 +260,6 @@ public class PaymentProcessorTest {
             double result = processor.processPayment(100.0, true, PaymentProcessor.PaymentMethod.CASH);
             // Path: amount validation -> first order discount -> no payment method discount -> final calc
             // Tax should still be applied: (100 * 0.90) * 1.15 = 103.5
-            // But gets: 90.0 because tax is calculated but never used
             assertEquals(103.5, result, 0.01, "Even cash payments should include tax calculation");
         }
     }
@@ -286,7 +271,6 @@ public class PaymentProcessorTest {
         @Test
         @DisplayName("Integration: Process payment and calculate delivery fee - tax bug affects total")
         void testProcessPaymentAndDeliveryFee() {
-            // Simulate the Main class workflow
             double amount = 100.0;
             boolean isFirstOrder = true;
             PaymentProcessor.PaymentMethod method = PaymentProcessor.PaymentMethod.CREDIT_CARD;
@@ -296,7 +280,6 @@ public class PaymentProcessorTest {
             double total = finalAmount + deliveryFee;
 
             // Expected with correct tax: (100 * 0.85) * 1.15 = 97.75
-            // Current buggy implementation: 85.0
             assertEquals(97.75, finalAmount, 0.01, "Tax calculation bug affects final amount");
             assertEquals(0.0, deliveryFee); // Both 97.75 and 85.0 are > 50, so no delivery fee
             assertEquals(97.75, total, 0.01, "Total calculation affected by tax bug");
@@ -314,7 +297,6 @@ public class PaymentProcessorTest {
             double total = finalAmount + deliveryFee;
 
             // Expected with tax: 30 * 1.15 = 34.5
-            // Current buggy: 30.0 (no tax applied)
             assertEquals(34.5, finalAmount, 0.01, "Tax should be applied even to small amounts");
             assertEquals(5.0, deliveryFee); // Both 34.5 and 30.0 are < 50, so delivery fee applies
             assertEquals(39.5, total, 0.01, "Total should include tax on payment amount");
@@ -331,11 +313,9 @@ public class PaymentProcessorTest {
             double deliveryFee = processor.calculateDeliveryFee(finalAmount);
 
             // Expected with tax after discount: (55 * 0.9) * 1.15 = 56.925 ≈ 56.93
-            // Current buggy: 49.5 (no tax)
             assertEquals(56.93, finalAmount, 0.01, "Tax should be applied after discount");
 
             // Expected delivery fee: 0.0 (56.93 > 50)
-            // Current buggy: 5.0 (49.5 < 50)
             assertEquals(0.0, deliveryFee, "With correct tax calculation, no delivery fee should apply");
         }
 
@@ -350,9 +330,8 @@ public class PaymentProcessorTest {
             double deliveryFee = processor.calculateDeliveryFee(finalAmount);
 
             // Expected: (60 * 0.98) * 1.15 = 67.62
-            // Current buggy: 58.8 (no tax)
             assertEquals(67.62, finalAmount, 0.01, "PayPal discount should be followed by tax calculation");
-            assertEquals(0.0, deliveryFee); // Both expected and buggy amounts > 50
+            assertEquals(0.0, deliveryFee);
         }
     }
 
@@ -365,7 +344,6 @@ public class PaymentProcessorTest {
         void testVerySmallAmount() {
             double result = processor.processPayment(0.10, false, PaymentProcessor.PaymentMethod.CASH);
             // Expected with tax: 0.10 * 1.15 = 0.115 ≈ 0.12 (rounded)
-            // Current buggy: 0.10 (no tax)
             assertEquals(0.12, result, 0.001, "Tax should apply even to very small amounts");
         }
 
@@ -374,7 +352,6 @@ public class PaymentProcessorTest {
         void testLargeAmount() {
             double result = processor.processPayment(999999.99, true, PaymentProcessor.PaymentMethod.CREDIT_CARD);
             // Expected: (999999.99 * 0.85) * 1.15 = 977499.99
-            // Current buggy: 849999.99 (no tax)
             assertEquals(977499.99, result, 0.01, "Large amounts should include tax calculation");
         }
 
@@ -383,8 +360,7 @@ public class PaymentProcessorTest {
         void testRoundingPrecision() {
             double result = processor.processPayment(33.333, true, PaymentProcessor.PaymentMethod.PAYPAL);
             // Expected: (33.333 * 0.88) * 1.15 = 33.69 (rounded from 33.693044)
-            // Current buggy: 29.33 (no tax applied)
-            assertEquals(33.69, result, 0.01, "Complex calculations should include tax and proper rounding");
+            assertEquals(33.73, result, 0.01, "Complex calculations should include tax and proper rounding");
         }
 
         @Test
@@ -395,7 +371,6 @@ public class PaymentProcessorTest {
             double result = processor.processPayment(amount, true, PaymentProcessor.PaymentMethod.CASH); // 10% discount
 
             // Expected: (46 * 0.90) * 1.15 = 47.61 (still < 50, delivery fee applies)
-            // Current buggy: 41.4 (< 50, delivery fee applies)
             assertEquals(47.61, result, 0.01, "Tax calculation affects delivery fee eligibility");
 
             double deliveryFee = processor.calculateDeliveryFee(result);
